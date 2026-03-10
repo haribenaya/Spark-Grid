@@ -11,19 +11,67 @@
     </style>
 </head>
 <body class="flex items-center justify-center h-screen">
-    <div id="auth-ui" class="glass p-10 rounded-[2.5rem] w-96 text-center">
-        <h2 id="title" class="text-3xl font-black italic mb-6 neon-blue uppercase">Login</h2>
+
+    <div id="auth-box" class="glass p-10 rounded-[3rem] w-96 text-center border border-sky-500/20 shadow-2xl">
+        <h2 id="auth-title" class="text-3xl font-black italic mb-6 neon-blue uppercase">Login</h2>
+        
         <div class="space-y-4">
-            <input id="uid" type="text" placeholder="User ID" class="w-full bg-slate-900 p-4 rounded-2xl outline-none">
-            <input id="upw" type="password" placeholder="Password" class="w-full bg-slate-900 p-4 rounded-2xl outline-none">
-            <button onclick="auth()" class="w-full bg-sky-500 p-4 rounded-2xl font-bold">Submit</button>
-            <button onclick="toggle()" class="text-sky-400 text-sm">Create New Account</button>
+            <input id="u-id" type="text" placeholder="User ID" class="w-full bg-slate-900 p-4 rounded-2xl outline-none border border-white/10 focus:border-sky-500">
+            <input id="u-pw" type="password" placeholder="Password" class="w-full bg-slate-900 p-4 rounded-2xl outline-none border border-white/10 focus:border-sky-500">
+            
+            <button onclick="handleAuth()" class="w-full bg-sky-600 p-4 rounded-2xl font-bold hover:bg-sky-500 transition-all shadow-lg shadow-sky-500/20">Submit</button>
+            
+            <p class="text-sm text-slate-500">
+                <span id="toggle-text">New user?</span> 
+                <button onclick="toggleView()" class="text-sky-400 font-bold ml-1 hover:underline">Create New Account</button>
+            </p>
         </div>
     </div>
 
-    <div id="admin-db" class="hidden glass p-10 rounded-[2.5rem] w-3/4">
-        <h2 class="text-3xl font-black mb-6 italic text-amber-400">ADMIN DATABASE</h2>
-        <div id="user-list" class="space-y-2"></div>
-    </div>
+    <script>
+        let isRegisterMode = false;
+
+        // This function makes the "Create New Account" button work
+        function toggleView() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? "REGISTER" : "LOGIN";
+            document.getElementById('toggle-text').innerText = isRegisterMode ? "Already have an account?" : "New user?";
+        }
+
+        // This function makes the "Submit" button work
+        async function handleAuth() {
+            const userId = document.getElementById('u-id').value;
+            const userPw = document.getElementById('u-pw').value;
+            const endpoint = isRegisterMode ? '/register' : '/login';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: userId, password: userPw})
+                });
+
+                const data = await response.json();
+
+                if(data.success) {
+                    alert(isRegisterMode ? "Registration Successful! Please Login." : "Login Success!");
+                    if(!isRegisterMode) {
+                        // If it's the admin, we show the database view
+                        if(userId === 'admin') showAdminDashboard(data.all_users);
+                        else alert("Redirecting to your dashboard...");
+                    }
+                } else {
+                    alert("Action Failed: Check credentials.");
+                }
+            } catch (err) {
+                alert("Server Error: Ensure Render is finished deploying.");
+            }
+        }
+
+        function showAdminDashboard(users) {
+            // Logic to display your admin DB would go here
+            console.log("Admin Logged In:", users);
+        }
+    </script>
 </body>
 </html>
